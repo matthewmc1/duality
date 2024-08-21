@@ -3,6 +3,7 @@ package data
 import "time"
 
 type AsyncProcessor struct {
+	
 }
 
 type AsyncInterface interface {

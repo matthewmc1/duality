@@ -73,13 +73,13 @@ type Database interface {
 	Delete(id string) error
 }
 
-func (db *DbClient) Create(ctx context.Context, client sqlx.DB, event Evergreen) error {
+func (db *DbClient) Create(ctx context.Context, client *sqlx.DB, event Evergreen) error {
 	tx := client.MustBeginTx(ctx, &sql.TxOptions{
-		Isolation: sql.LevelWriteCommitted,
+		Isolation: sql.LevelDefault,
 		ReadOnly:  false,
 	})
 
-	res, err := tx.NamedExec("INSERT INTO evergreen VALUES ($1, $2, $3, $4, %5)", event)
+	res, err := tx.NamedExec("INSERT INTO evergreen VALUES (:id, :title, :labels, :created_date, :details)", &event)
 	if err != nil {
 		log.Fatalln(res, err)
 		return err

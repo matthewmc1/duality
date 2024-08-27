@@ -28,18 +28,32 @@ func main() {
 	reqctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	uuid, err := uuid.NewV7()
+	id, err := uuid.NewV7()
 	if err != nil {
 		log.Println("error creating uuid", err)
 	}
 
 	eg := data.Evergreen{
-		Id:          uuid,
+		Id:          id,
 		Title:       "Testing async flows",
 		Label:       "test",
 		CreatedDate: time.Now().Format(time.RFC3339),
 		Details:     "Sync",
 	}
 
+	id2, err := uuid.NewV7()
+	if err != nil {
+		log.Println("error creating uuid", err)
+	}
+
+	eg2 := data.Evergreen{
+		Id:          id2,
+		Title:       "Testing async flows new",
+		Label:       "test",
+		CreatedDate: time.Now().Format(time.RFC3339),
+		Details:     "Sync",
+	}
+
 	dbclient.Create(reqctx, db, eg)
+	dbclient.DeleteByTitle(reqctx, db, eg2.Title)
 }

@@ -70,7 +70,7 @@ func Client(client DbClient) (*sqlx.DB, error) {
 
 type Database interface {
 	Create() error
-	Delete(id string) error
+	DeleteByTitle(title string) error
 }
 
 func (db *DbClient) Create(ctx context.Context, client *sqlx.DB, event Evergreen) error {
@@ -79,9 +79,26 @@ func (db *DbClient) Create(ctx context.Context, client *sqlx.DB, event Evergreen
 		ReadOnly:  false,
 	})
 
-	res, err := tx.NamedExec("INSERT INTO evergreen VALUES (:id, :title, :labels, :created_date, :details)", &event)
+	res, err := tx.NamedExec("INSERT INTO evergreen VALUES (:id, :title, :labels, :created_date, :details);", &event)
 	if err != nil {
 		log.Fatalln(res, err)
+		return err
+	}
+
+	tx.Commit()
+	return nil
+}
+
+func (db *DbClient) DeleteByTitle(ctx context.Context, client *sqlx.DB, title string) error {
+	tx := client.MustBeginTx(ctx, &sql.TxOptions{
+		Isolation: sql.LevelDefault,
+		ReadOnly:  false,
+	})
+
+	res := tx.MustExec("DELETE FROM evergreen WHERE title=$1", title)
+	v, err := res.RowsAffected()
+	if v == 0 || err != nil {
+		log.Println("no rows deleted or value incorrect")
 		return err
 	}
 
